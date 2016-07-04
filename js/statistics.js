@@ -92,6 +92,45 @@ function median(sampleArray){
 	return median;
 }
 
+function mode(sampleArray){
+	// most frequently occurring value in array
+}
+
+function deviation(sampleArray){
+	// distance between a given array value and array mean
+	var mean = average(sampleArray);
+	var deviations = []
+
+	for (var i = 0; i < sampleArray.length; i++) {
+		deviations.push(sampleArray[i]-mean);
+	}
+
+	return deviations;
+}
+
+function variance(sampleArray, bessel = false){
+	// sum of SQUARED deviations divided by n (length of array) 
+	// or mean of squared deviations
+
+	var sumOfSquares = 0;
+	var deviations = deviation(sampleArray);
+
+	for (var i = 0; i < deviations.length; i++) {
+		sumOfSquares += deviations[i]*deviations[i];
+	}
+
+	var nSamples = bessel ? deviations.length - 1 : deviations.length;
+
+	return sumOfSquares / nSamples;
+
+}
+
+function stdDeviation(sampleArray, corrected = false){
+	// sqrt of variance
+	// corrected = true is Bessel's correction
+	return Math.sqrt(variance(sampleArray, corrected));
+}
+
 function calculate(){
 	/*
 	Top level function called from the html "input"
@@ -107,6 +146,12 @@ function calculate(){
 
 	var averageOfSamples = average(generatedSamples);
 	console.log(averageOfSamples);
+
+	var standardDev = stdDeviation(generatedSamples);
+	console.log(standardDev);
+
+	var correctedStdDev = stdDeviation(generatedSamples, true);
+	console.log(correctedStdDev);
 
 	drawHistogram(generatedSamples, 15);
 
