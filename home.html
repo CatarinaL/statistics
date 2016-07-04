@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="js/statistics.js" type="text/javascript" charset="utf-8" async defer></script>
+		<style>
+
+		.bar rect {
+		  fill: steelblue;
+		}
+
+		.bar text {
+		  fill: #fff;
+		  font: 10px sans-serif;
+		}
+
+		</style>
+
+	</head>
+	<body>
+		<p>Pick number of cards on each sample between 1 and 52 (default is 3)</p>
+		<input id="card_sample" name="sample_size" type="number" min="1" max="52" step="1" placeholder="Number of cards sampled between 1 and 52" value="3">
+		<p>Pick a sample size between 1 and 1000 (default is 30)</p>
+		<input id="sample_size" name="sample_size" type="number" min="1" max="1000" step="1" placeholder="Number of cards sampled between 1 and 52" value="30">
+
+		<button onClick="calculate()">Calculate statistics</button>
+
+		<div class="histogram">
+		</div>
+	</body>
+</html>
