@@ -96,6 +96,20 @@ function mode(sampleArray){
 	// most frequently occurring value in array
 }
 
+// variability statistics
+
+function interquartileRange() {
+	// range of distribution between lower and upper 25% 
+	// used to cut off tails of distribution - outliers
+	// IQR = Q3-Q1
+}
+
+// function outliers(){
+	// <[Q1-1.5(IQR)]
+	// >[Q3+1.5(IQR)]
+//}
+
+
 function deviation(sampleArray){
 	// distance between a given array value and array mean
 	var mean = average(sampleArray);
