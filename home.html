@@ -3,6 +3,8 @@
 <html>
 	<head>
 		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="js/ztable.js" type="text/javascript" charset="utf-8" async defer></script>
+		<script src="js/box.js" type="text/javascript" charset="utf-8" async defer></script>
 		<script src="js/statistics.js" type="text/javascript" charset="utf-8" async defer></script>
 		<style>
 
@@ -13,6 +15,31 @@
 		.bar text {
 		  fill: #fff;
 		  font: 10px sans-serif;
+		}
+
+		body {
+		  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+		}
+
+		.box {
+		  font: 10px sans-serif;
+		}
+
+		.box line,
+		.box rect,
+		.box circle {
+		  fill: #fff;
+		  stroke: #000;
+		  stroke-width: 1.5px;
+		}
+
+		.box .center {
+		  stroke-dasharray: 3,3;
+		}
+
+		.box .outlier {
+		  fill: none;
+		  stroke: #ccc;
 		}
 
 		</style>
@@ -28,5 +55,8 @@
 
 		<div class="histogram">
 		</div>
+		<div class="boxplot">
+		</div>
+		
 	</body>
 </html>
