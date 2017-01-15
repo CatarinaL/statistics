@@ -54,9 +54,7 @@ function getSampleValues(numberCards, sampleSize, deck){
 
 	for (var i = 0; i < sampleSize; i++) {
 		var sample = sampleCards(numberCards, deck); 
-		// console.log(sample);
 		var sumOfSample = sumCards(sample);
-		console.log(sumOfSample);
 		generatedSamples.push(sumOfSample);
 	};
 	return generatedSamples;
@@ -94,6 +92,57 @@ function median(sampleArray){
 
 function mode(sampleArray){
 	// most frequently occurring value in array
+	var valueFrequencies = {};
+
+	sampleArray.forEach(function (n) {
+	   valueFrequencies[n] = (valueFrequencies[n] || 0) + 1;
+	});
+
+
+	var maxValue = -1;
+	var maxKey = -1;
+	for(var key in valueFrequencies) {
+		val = valueFrequencies[key];
+		if(val > maxValue) {
+			maxKey = key;
+			maxValue = val;
+		}
+	}
+	return maxKey;
+}
+
+// variability statistics
+
+function getQuartiles(sampleArray) {
+	sampleArray.sort(compareNumbers);
+	var q1 = sampleArray[Math.floor(sampleArray.length*0.25)];
+	var q3 = sampleArray[Math.ceil(sampleArray.length*0.75)];
+
+	return [q1, q3];
+}
+
+function interquartileRange(sampleArray) {
+	// range of distribution between lower and upper 25% 
+	// used to cut off tails of distribution - outliers
+	// IQR = Q3-Q1
+	var quartiles = getQuartiles(sampleArray);
+
+	return quartiles[1]-quartiles[0];
+}
+
+function outliers(sampleArray){
+	// <[Q1-1.5(IQR)]
+	// >[Q3+1.5(IQR)]
+	var quartiles = getQuartiles(sampleArray);
+	var iqr = interquartileRange(sampleArray);
+	var outliers = [];
+	for (var i = 0; i < sampleArray.length; i++) {
+		 if (sampleArray[i] < (quartiles[0]-iqr*1.5) || sampleArray[i] > (quartiles[1]+iqr*1.5)) {
+		 	outliers.push(sampleArray[i]);
+		 }
+	};
+
+	return outliers;
 }
 
 function deviation(sampleArray){
@@ -131,6 +180,16 @@ function stdDeviation(sampleArray, corrected = false){
 	return Math.sqrt(variance(sampleArray, corrected));
 }
 
+function zScore(standardDev, meanOfSamples, value){
+	return ((value-meanOfSamples)/standardDev).toFixed(2);
+}
+
+function zProbability(zScore){
+
+}
+
+
+
 function calculate(){
 	/*
 	Top level function called from the html "input"
@@ -144,8 +203,8 @@ function calculate(){
 	var generatedSamples = getSampleValues(numberCards, sampleSize, deck);
 	console.log(generatedSamples);
 
-	var averageOfSamples = average(generatedSamples);
-	console.log(averageOfSamples);
+	var meanOfSamples = average(generatedSamples);
+	console.log(meanOfSamples);
 
 	var standardDev = stdDeviation(generatedSamples);
 	console.log(standardDev);
@@ -153,13 +212,44 @@ function calculate(){
 	var correctedStdDev = stdDeviation(generatedSamples, true);
 	console.log(correctedStdDev);
 
-	drawHistogram(generatedSamples, 15);
+	var zedScore = zScore(correctedStdDev, meanOfSamples, 10);
+	console.log(zedScore);
 
-	console.log(median([1, 9, 6, 4, 15]));
-	 
+	drawHistogram(generatedSamples, 2);
+
+	console.log(mode(generatedSamples));	 
+	console.log(interquartileRange(generatedSamples));
+	console.log(outliers(generatedSamples));
+
+	drawBoxPlot(generatedSamples);
+
 };
 
+// Returns a function to compute the interquartile range.
+// TODO: get rid of this
+function iqr(k) {
+  return function(d, i) {
+    var q1 = d.quartiles[0],
+        q3 = d.quartiles[2],
+        iqr = (q3 - q1) * k,
+        i = -1,
+        j = d.length;
+    while (d[++i] < q1 - iqr);
+    while (d[--j] > q3 + iqr);
+    return [i, j];
+  };
+}
+
 // Auxiliary functions go HERE
+
+// This is a hack to maintain compatibility with older d3 code
+function d3_functor(v) {
+    return typeof v === "function" ? v : function() {
+      return v;
+    };
+  }
+d3.functor = d3_functor;
+
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
@@ -169,6 +259,45 @@ function compareNumbers(a, b) {
     return a - b;
 }
 
+function minMax(sampleArray){
+	var min = Infinity;
+	var max = -Infinity;
+
+	for (var i of sampleArray) {
+		if(i < min){
+			min = i;
+		}
+		if(i > max){
+			max = i;
+		}
+	};
+	return [min, max];
+}
+
+function drawBoxPlot(samples) {
+	var margin = {top: 10, right: 50, bottom: 20, left: 50},
+    width = 120 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+	var chart = d3.box()
+	    .whiskers(iqr(1.5))
+	    .width(width)
+	    .height(height);
+
+  	var data = [samples];
+
+  	chart.domain(minMax(samples));
+  	// Remove the previous SVG from the histogram div
+    d3.select("div.boxplot").select("svg").remove();
+  	var svg = d3.select("div.boxplot").selectAll("svg")
+      .data(data).enter().append("svg")
+      .attr("class", "box")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.bottom + margin.top)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .call(chart);
+}
 
 function drawHistogram(samples, binsize){
 
@@ -180,17 +309,22 @@ function drawHistogram(samples, binsize){
 	    width = 960 - margin.left - margin.right,
 	    height = 500 - margin.top - margin.bottom;
 
-	// change domain to be dynamic, based on the array values (samples)
-	//var x = d3.scaleLinear().domain([0, (d3.max(data) + binsize) - ((d3.max(data) + binsize) % binsize) ])
-    //.rangeRound([0, width]);
-    var x = d3.scaleLinear().domain([0, 30])
+	var xTopDomain = 0;
+
+	if(d3.max(data) % binsize == 0) {
+		xTopDomain = d3.max(data);
+	} else {
+		xTopDomain = d3.max(data) + binsize - ((d3.max(data) + binsize) % binsize);
+	}
+
+	var xDomainArray = [0, xTopDomain];
+	var x = d3.scaleLinear().domain(xDomainArray)
     .rangeRound([0, width]);
 
-	// change domain to be dynamic, based on the array values (samples)
-	// change thresholds to be dynamic
+	var numberOfBins = Math.ceil(d3.max(data) / binsize); 
 	var bins = d3.histogram()
-    .domain([0, 30])
-    .thresholds(binsize)
+    .domain(xDomainArray)
+    .thresholds(numberOfBins)
     (data);
 
 
@@ -198,7 +332,9 @@ function drawHistogram(samples, binsize){
     .domain([0, d3.max(bins, function(d) { return d.length; })])
     .range([height, 0]);
 
-    // make this only generate one histogram - always override one element/use the same element
+    // Remove the previous SVG from the histogram div
+    d3.select("div.histogram").select("svg").remove();
+    
 	var svg = d3.select("div.histogram").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -229,20 +365,3 @@ function drawHistogram(samples, binsize){
     .call(d3.axisBottom(x));
 
 }
-
-
-
-
-/*
-cardDeck = [
-  ["H1", 1],
-  ["H2", 2],
-  ["H3", 3],
-  ...
-]
-card = ["D5", 5]
-cardName = card[0]
-cardValue = card[1]
-
-*/
-
